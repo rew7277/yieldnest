@@ -1,13 +1,17 @@
 import os
-from datetime import datetime, date
+import secrets
+from datetime import datetime, date, timedelta
 from decimal import Decimal
+from io import BytesIO
+from urllib.parse import urlencode
 from functools import wraps
 
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, url_for, send_file
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
+import qrcode
 
 load_dotenv()
 
@@ -75,6 +79,10 @@ class Investment(db.Model):
     payer_upi_id = db.Column(db.String(120), nullable=True)
     payer_phonepe_number = db.Column(db.String(30), nullable=True)
     screenshot_url = db.Column(db.String(500), nullable=True)
+    qr_token = db.Column(db.String(80), nullable=True, index=True)
+    qr_created_at = db.Column(db.DateTime, nullable=True)
+    qr_expires_at = db.Column(db.DateTime, nullable=True)
+    qr_regenerate_after = db.Column(db.DateTime, nullable=True)
     admin_note = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     paid_at = db.Column(db.DateTime, nullable=True)
@@ -110,6 +118,37 @@ def money(value):
 
 def maturity_amount(principal, interest_rate):
     return money(Decimal(principal) * (Decimal("1") + (Decimal(interest_rate) / Decimal("100"))))
+
+
+def ensure_qr_token(inv, force=False):
+    """Create a unique UPI QR token. QR is valid 60 seconds; next QR unlocks after 2 minutes."""
+    now = datetime.utcnow()
+    if (
+        not force
+        and inv.qr_token
+        and inv.qr_regenerate_after
+        and now < inv.qr_regenerate_after
+    ):
+        return inv
+    inv.qr_token = secrets.token_urlsafe(18)
+    inv.qr_created_at = now
+    inv.qr_expires_at = now + timedelta(seconds=60)
+    inv.qr_regenerate_after = now + timedelta(seconds=120)
+    db.session.commit()
+    return inv
+
+
+def build_upi_uri(inv):
+    note = f"YN-{inv.id}-{inv.qr_token[:8]}"
+    params = {
+        "pa": inv.fund.phonepe_upi_id,
+        "pn": BRAND_NAME,
+        "am": f"{Decimal(inv.principal_amount):.2f}",
+        "cu": "INR",
+        "tn": note,
+        "tr": note,
+    }
+    return "upi://pay?" + urlencode(params)
 
 
 @app.template_filter("inr")
@@ -210,7 +249,7 @@ def invest(fund_id):
     )
     db.session.add(inv)
     db.session.commit()
-    flash("Slot request created. Complete PhonePe/UPI payment and submit payment details.", "success")
+    flash("Slot request created. Scan the secure QR and submit payment details.", "success")
     return redirect(url_for("payment_submit", investment_id=inv.id))
 
 
@@ -222,6 +261,11 @@ def payment_submit(investment_id):
         flash("Access denied.", "error")
         return redirect(url_for("user_dashboard"))
     if request.method == "POST":
+        submitted_token = request.form.get("qr_token", "").strip()
+        now = datetime.utcnow()
+        if not inv.qr_token or submitted_token != inv.qr_token or not inv.qr_expires_at or now > inv.qr_expires_at:
+            flash("This QR session has expired. Please generate a fresh QR and submit again.", "error")
+            return redirect(url_for("payment_submit", investment_id=inv.id))
         inv.payer_name = request.form.get("payer_name", "").strip()
         inv.payer_upi_id = request.form.get("payer_upi_id", "").strip()
         inv.payer_phonepe_number = request.form.get("payer_phonepe_number", "").strip()
@@ -232,11 +276,47 @@ def payment_submit(investment_id):
             return redirect(url_for("payment_submit", investment_id=inv.id))
         inv.payment_status = "submitted"
         inv.status = "verification_pending"
-        inv.paid_at = datetime.utcnow()
+        inv.paid_at = now
         db.session.commit()
-        flash("Payment notification submitted. Admin will verify it.", "success")
+        flash("Payment notification submitted. We will verify it shortly.", "success")
         return redirect(url_for("user_dashboard"))
-    return render_template("user/payment.html", inv=inv)
+    now = datetime.utcnow()
+    if not inv.qr_token or not inv.qr_regenerate_after or now >= inv.qr_regenerate_after:
+        ensure_qr_token(inv, force=True)
+    return render_template("user/payment.html", inv=inv, now=now)
+
+
+@app.route("/investment/<int:investment_id>/qr.png")
+@login_required
+def payment_qr_png(investment_id):
+    inv = Investment.query.get_or_404(investment_id)
+    if inv.user_id != current_user.id and current_user.role != "admin":
+        flash("Access denied.", "error")
+        return redirect(url_for("user_dashboard"))
+    if not inv.qr_token or not inv.qr_expires_at or datetime.utcnow() > inv.qr_expires_at:
+        img = qrcode.make("EXPIRED")
+    else:
+        img = qrcode.make(build_upi_uri(inv))
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return send_file(buf, mimetype="image/png", max_age=0)
+
+
+@app.route("/investment/<int:investment_id>/qr/refresh", methods=["POST"])
+@login_required
+def refresh_payment_qr(investment_id):
+    inv = Investment.query.get_or_404(investment_id)
+    if inv.user_id != current_user.id and current_user.role != "admin":
+        flash("Access denied.", "error")
+        return redirect(url_for("user_dashboard"))
+    now = datetime.utcnow()
+    if inv.qr_regenerate_after and now < inv.qr_regenerate_after:
+        flash("New QR can be generated after the 2-minute refresh window.", "error")
+    else:
+        ensure_qr_token(inv, force=True)
+        flash("Fresh QR generated. Complete payment within 60 seconds.", "success")
+    return redirect(url_for("payment_submit", investment_id=inv.id))
 
 
 @app.route("/admin")
