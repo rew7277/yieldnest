@@ -1,77 +1,84 @@
-# YieldNest - Professional Slot-Based Plan Platform
+# YieldNest Premium V4
 
-YieldNest is a Flask web app for publishing manager-controlled plans where users can select slots, view expected maturity value, scan a unique QR payment session, submit UPI/PhonePe payment details, and track verification status.
+Professional slot-based plan platform with admin-managed plans, user dashboards, secure timed QR payment sessions, and payment webhook readiness.
 
-## Default admin login
-Set these in `.env` or Railway variables:
+## Admin login
 
-- `ADMIN_EMAIL=admin@yieldnest.local`
-- `ADMIN_PASSWORD=ChangeMe123!`
+Default local login:
 
-Admin panel URL:
+- URL: `/admin`
+- Email: `admin@yieldnest.local`
+- Password: `ChangeMe123!`
 
-- Local: `http://127.0.0.1:5000/admin`
-- Railway: `https://your-domain.up.railway.app/admin`
+Set these in Railway before production:
 
-Change the admin email/password before production.
+```env
+ADMIN_EMAIL=youradmin@email.com
+ADMIN_PASSWORD=yourStrongPassword
+```
 
-## Important compliance note
-This app is software only. Offering pooled funds, fixed returns, interest, maturity payouts, or early withdrawal charges may require SEBI/RBI/legal registration depending on your business model and jurisdiction. Get professional legal review before accepting public money.
+## Railway environment variables
 
-## Features
-- Professional animated landing page
-- User signup/login
-- Plan listing with slot value, minimum slots, expected return, maturity date, early-exit charge
-- User purchase calculator
-- Unique UPI QR generated per purchase request
-- QR is valid for 60 seconds
-- New QR generation unlocks after 2 minutes
-- Payment notification form with payer name, payer UPI ID, PhonePe number, UTR/reference ID, screenshot URL
-- Admin dashboard
-- Admin create/edit/activate/deactivate plans
-- Admin review payments and approve/reject requests
-- Terms & conditions page
-- Railway-ready Procfile + database support
+```env
+SECRET_KEY=change-me
+DATABASE_URL=<Railway PostgreSQL URL>
+BRAND_NAME=YieldNest
+SUPPORT_EMAIL=support@yourdomain.com
+ADMIN_EMAIL=youradmin@email.com
+ADMIN_PASSWORD=yourStrongPassword
+PLATFORM_UPI_ID=yourupi@ybl
+PLATFORM_PAYEE_NAME=YieldNest
+PLATFORM_PHONEPE_NUMBER=hidden
+PAYMENT_WEBHOOK_SECRET=use-a-long-random-secret
+```
 
-## Local setup
+`PLATFORM_UPI_ID` is the real UPI ID where you receive money. It is not shown as text to users. The QR is generated with `PLATFORM_PAYEE_NAME=YieldNest`, so the user sees the branded payee name in their UPI app.
+
+## Payment flow logic
+
+1. User selects a plan and slot count.
+2. App creates a slot request with `payment_pending` status.
+3. App generates a unique QR token for that request.
+4. QR is valid for 60 seconds.
+5. A fresh QR can be generated after the 2-minute refresh window.
+6. User scans and pays.
+7. User clicks **I have completed payment**.
+8. Page starts polling payment status.
+9. When payment is confirmed, the app redirects to the dashboard and the allocated slots are visible.
+
+## Important automatic payment note
+
+A plain UPI QR cannot reliably tell the website that money was received. For real automatic closing/redirect after payment, connect a real payment provider status API or webhook.
+
+This starter includes a webhook endpoint:
+
+```http
+POST /api/payment/webhook
+Content-Type: application/json
+
+{
+  "secret": "PAYMENT_WEBHOOK_SECRET",
+  "investment_id": 1,
+  "transaction_ref": "TXN123",
+  "status": "SUCCESS"
+}
+```
+
+When the webhook receives `SUCCESS`, the request is marked approved and the user dashboard shows the allocated slots.
+
+## Local run
+
 ```bash
-python -m venv .venv
-.venv\Scripts\activate   # Windows
-# source .venv/bin/activate # Mac/Linux
 pip install -r requirements.txt
-cp .env.example .env
 python app.py
 ```
 
-Open `http://127.0.0.1:5000`
-
 ## Railway deployment
+
 1. Push this folder to GitHub.
 2. Create a Railway project from the GitHub repo.
-3. Add PostgreSQL in Railway.
-4. Set environment variables:
-   - `SECRET_KEY`
-   - `DATABASE_URL`
-   - `ADMIN_EMAIL`
-   - `ADMIN_PASSWORD`
-   - `BRAND_NAME`
-   - `SUPPORT_EMAIL`
-5. Railway will use the included Procfile with Gunicorn.
+3. Add PostgreSQL.
+4. Add environment variables above.
+5. Deploy.
 
-## Payment flow
-This starter supports manual UPI/PhonePe verification. Users scan the generated QR and submit transaction details. Admin approves only after verifying the transaction. For fully automatic payment status and callbacks, integrate the official PhonePe Payment Gateway APIs.
-
-## V3 landing-page upgrade
-
-This version adds a premium marketing-style home page inspired by modern wealth/portfolio sites:
-
-- Rich hero section with plan value, maturity, QR session, and trust messaging
-- Stats strip
-- Why-this-platform section
-- Step-by-step process section
-- Trust and terms visibility panel
-- FAQ section
-- Lead/call request form
-- Admin page for viewing call requests: `/admin/leads`
-
-The public page avoids technical deployment wording and does not expose PhonePe number or raw UPI ID on the payment screen. Payment continues through a short-lived dynamic QR session.
+The included `Procfile` runs Gunicorn.

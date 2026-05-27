@@ -30,4 +30,19 @@ function startQrTimer(){
   tick(); setInterval(tick, 1000);
 }
 
-document.addEventListener('DOMContentLoaded', startQrTimer);
+function startPaymentPolling(){
+  if(!window.YN_PAYMENT_STATUS_URL) return;
+  async function poll(){
+    try{
+      const res = await fetch(window.YN_PAYMENT_STATUS_URL, {headers:{'Accept':'application/json'}});
+      const data = await res.json();
+      if(data.ok && ['approved','verification_pending'].includes(data.status)){
+        window.location.href = window.YN_DASHBOARD_URL || data.redirect_url || '/dashboard';
+      }
+    }catch(e){ /* keep polling silently */ }
+  }
+  poll();
+  setInterval(poll, 4000);
+}
+
+document.addEventListener('DOMContentLoaded', () => { startQrTimer(); startPaymentPolling(); });

@@ -1,72 +1,75 @@
 {% extends 'base.html' %}{% block content %}
-<section class="wealth-hero">
+<section class="executive-hero">
   <div class="hero-copy reveal">
-    <span class="eyebrow">Private slot-based plan access</span>
-    <h1>Build confidence before every slot purchase.</h1>
-    <p class="lead">A premium digital platform where members can discover curated plans, compare slot value, maturity timeline, expected benefit, exit terms, and complete secure QR-based payment submission with transparent verification.</p>
-    <div class="cta-row"><a class="btn primary large" href="#plans">View available plans</a><a class="btn ghost large" href="#consult">Request a call</a></div>
-    <div class="cred-strip"><span>✓ Transparent plan terms</span><span>✓ 60-sec dynamic QR</span><span>✓ Manual payment verification</span><span>✓ User dashboard tracking</span></div>
+    <span class="eyebrow">Premium slot management platform</span>
+    <h1>Transparent slot purchases with secure QR payments and maturity tracking.</h1>
+    <p class="lead">A polished member portal where users can review plan value, expected maturity outcome, timeline, exit terms, and payment status before making a slot purchase.</p>
+    <div class="cta-row"><a class="btn primary big" href="{{ url_for('register') }}">Create account</a><a class="btn ghost big" href="#plans">Explore plans</a><a class="btn ghost big" href="#consult">Request call</a></div>
+    <div class="hero-assurance"><span>✓ Clear terms before payment</span><span>✓ Unique timed QR sessions</span><span>✓ Dashboard-based allocation tracking</span></div>
   </div>
-  <div class="hero-invest-card reveal delay">
-    <div class="dashboard-mock">
-      <div class="mock-head"><span></span><span></span><span></span></div>
-      <div class="mock-value"><small>Expected maturity view</small><b>₹1,12,000</b><em>based on selected plan</em></div>
-      <div class="chart-bars"><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="qr-session"><div class="qr-mini"><span></span><span></span><span></span><span></span></div><div><b>Dynamic UPI QR</b><small>Expires in 60 seconds</small></div></div>
+  <div class="executive-visual reveal">
+    <div class="glass-panel main-panel">
+      <div class="panel-top"><span></span><span></span><span></span></div>
+      <div class="portfolio-head"><small>Total slot request</small><b>₹10,000</b><em>Pending secure payment</em></div>
+      <div class="smooth-chart"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="qr-preview"><div class="qr-mini"><span></span><span></span><span></span><span></span></div><div><b>Dynamic QR</b><small>Expires in 60 seconds</small></div></div>
     </div>
-    <div class="metric-card m1"><b>Slot value</b><span>Admin configured</span></div>
-    <div class="metric-card m2"><b>Maturity date</b><span>Visible before payment</span></div>
-    <div class="metric-card m3"><b>Exit terms</b><span>Clear charges shown</span></div>
+    <div class="floating-card fc1"><b>Slot value</b><span>Published by plan</span></div>
+    <div class="floating-card fc2"><b>Maturity date</b><span>Visible upfront</span></div>
+    <div class="floating-card fc3"><b>Allocation</b><span>Shown after verification</span></div>
   </div>
 </section>
 
-<section class="brand-stats reveal">
-  <div><b>100%</b><span>Plan values controlled from admin panel</span></div>
-  <div><b>60 sec</b><span>QR validity window per purchase</span></div>
-  <div><b>2 min</b><span>QR regeneration protection</span></div>
-  <div><b>Live</b><span>Status tracking after payment submission</span></div>
+<section class="trust-strip">
+  <div><b>100%</b><span>Plan values visible before purchase</span></div>
+  <div><b>60 sec</b><span>Short-validity QR payment session</span></div>
+  <div><b>24/7</b><span>User dashboard access</span></div>
+  <div><b>Clear</b><span>Maturity and early-exit terms</span></div>
 </section>
 
-<section class="split-section reveal" id="about">
-  <div>
-    <span class="eyebrow">Why this platform</span>
-    <h2>Designed to feel credible, clear, and easy for first-time users.</h2>
-    <p>Users should not feel confused about what they are buying. Every plan highlights the slot price, minimum slot requirement, maturity date, expected benefit calculation, payment process, and early-exit terms before they submit payment details.</p>
-  </div>
-  <div class="benefit-grid">
-    <div class="benefit"><b>Plan discovery</b><span>Show multiple published plans with concise highlights and detailed pages.</span></div>
-    <div class="benefit"><b>Expected maturity</b><span>Calculate expected value based on slots and admin-configured percentage.</span></div>
-    <div class="benefit"><b>Payment discipline</b><span>Each request gets a unique QR session instead of exposing raw UPI details.</span></div>
-    <div class="benefit"><b>Approval workflow</b><span>Admin reviews UTR/reference details before approval.</span></div>
+<section id="about" class="premium-split">
+  <div><span class="eyebrow">Why this platform</span><h2>Built for clarity, confidence, and simple plan discovery.</h2><p>Users should not need to call support just to understand the basics. The platform shows each plan’s slot value, minimum slot requirement, expected benefit, maturity date, and exit charges before payment.</p></div>
+  <div class="benefit-grid deluxe">
+    <div class="benefit"><b>Plan-first experience</b><span>Each plan is presented with commercial values, dates, and conditions in a clean card layout.</span></div>
+    <div class="benefit"><b>Secure payment flow</b><span>Users pay through a unique QR generated for that exact request amount.</span></div>
+    <div class="benefit"><b>No exposed UPI details</b><span>The page shows only the branded QR experience, while the actual UPI ID is stored securely in Railway environment variables.</span></div>
+    <div class="benefit"><b>Allocation tracking</b><span>Once payment is verified, the user dashboard displays allocated slots, amount, expected maturity amount, and status.</span></div>
   </div>
 </section>
 
-<section class="process-section reveal" id="process">
-  <div class="section-center"><span class="eyebrow">How it works</span><h2>A simple purchase journey from plan selection to verification.</h2></div>
+<section id="process" class="process-section expanded">
+  <div class="section-center"><span class="eyebrow">How it works</span><h2>A guided purchase journey from plan selection to slot allocation.</h2><p class="muted">The flow is designed to reduce confusion and support a professional payment verification model.</p></div>
   <div class="timeline-cards">
-    <div><small>01</small><b>Explore plans</b><p>Review fund name, slot value, expected rate, maturity date, minimum slots, and terms.</p></div>
-    <div><small>02</small><b>Choose slots</b><p>Select the number of slots allowed by the plan and preview payable and expected maturity amounts.</p></div>
-    <div><small>03</small><b>Pay by QR</b><p>Scan the temporary UPI QR generated only for that purchase request.</p></div>
-    <div><small>04</small><b>Submit proof</b><p>Enter payer name, UPI ID, PhonePe number, and UTR/reference ID for admin verification.</p></div>
-    <div><small>05</small><b>Track status</b><p>User dashboard shows pending, submitted, approved, rejected, and maturity information.</p></div>
+    <div><small>01</small><b>Review plan</b><p>Compare slot value, maturity date, expected return, minimum slots, and early-exit terms.</p></div>
+    <div><small>02</small><b>Select slots</b><p>Choose the number of slots allowed by the plan and confirm the total payable amount.</p></div>
+    <div><small>03</small><b>Scan QR</b><p>A unique QR is generated for the exact request and is valid only for a short time window.</p></div>
+    <div><small>04</small><b>Payment check</b><p>The system waits for provider confirmation or admin verification, depending on your payment setup.</p></div>
+    <div><small>05</small><b>Slots allocated</b><p>After verification, the dashboard shows the confirmed slot allocation and maturity details.</p></div>
   </div>
 </section>
 
-<section class="trust-panel reveal">
-  <div class="trust-copy"><span class="eyebrow">Built for trust</span><h2>No hidden confusion. Every important condition is visible.</h2><p>Early withdrawal charges, payment verification rules, maturity calculation, and risk notes are displayed before the user proceeds. This helps the site look legitimate and avoids misleading claims.</p></div>
-  <div class="trust-checks"><p>✓ Clear terms before purchase</p><p>✓ No raw payment details shown publicly</p><p>✓ QR expiry and regeneration control</p><p>✓ Admin approval before confirmation</p><p>✓ Responsive mobile-friendly layout</p></div>
+<section class="trust-panel wide-panel">
+  <div><span class="eyebrow">Payment logic</span><h2>UPI hidden from users, branded QR shown to users.</h2><p>The receiving UPI ID can be configured in Railway using environment variables. Users see the payee name as YieldNest while scanning. For automatic redirect after payment, connect a payment gateway webhook/status API; otherwise the payment remains under verification.</p></div>
+  <div class="trust-checks"><p>✓ PLATFORM_UPI_ID controls the receiving UPI account</p><p>✓ PLATFORM_PAYEE_NAME controls what appears in UPI apps</p><p>✓ Payment webhook can auto-approve and redirect users</p><p>✓ Admin can still review requests when needed</p></div>
 </section>
 
-<div id="plans" class="section-title reveal"><div><span class="eyebrow">Available plans</span><h2>Choose a published plan</h2></div><span class="muted">Review all details before purchase</span></div>
-<div class="grid reveal">{% for fund in funds %}<div class="card fund premium-fund"><span class="badge ok">Open for purchase</span><h3>{{ fund.name }}</h3><p class="muted">{{ fund.tagline or fund.description[:110] }}</p><div class="price">{{ fund.slot_value|inr }} <small>/ slot</small></div><div class="fund-facts"><span>Min {{ fund.min_slots }} slots</span><span>{{ fund.expected_interest_rate }}% expected</span><span>{{ fund.maturity_date.strftime('%d %b %Y') }}</span></div><a class="btn primary" href="{{ url_for('login') }}">Login to purchase</a></div>{% else %}<div class="card"><p>No active plans yet.</p></div>{% endfor %}</div>
-
-<section class="faq-section reveal" id="faq">
-  <div class="section-center"><span class="eyebrow">Questions users ask</span><h2>Important information before proceeding</h2></div>
-  <div class="faq-grid"><details open><summary>Is the maturity amount guaranteed?</summary><p>No. Displayed values are expected calculations based on admin-configured plan rules and must be reviewed with final agreement and applicable law.</p></details><details><summary>What happens if payment is sent but not approved?</summary><p>The request remains pending or can be rejected if transaction evidence is incomplete, incorrect, or suspicious.</p></details><details><summary>Can a user exit before maturity?</summary><p>Early withdrawal can attract charges. The charge percentage is shown on the plan page before purchase.</p></details><details><summary>Why is QR valid only for 60 seconds?</summary><p>Short-lived QR sessions reduce confusion and help each payment request stay linked to a unique purchase session.</p></details></div>
+<section id="plans">
+  <div class="section-title"><h2>Available Plans</h2><span class="muted">Choose a published plan to view complete details</span></div>
+  <div class="grid premium-grid">{% for fund in funds %}<div class="card fund premium-fund"><span class="badge ok">Open</span><h3>{{ fund.name }}</h3><p class="muted">{{ fund.tagline or fund.description[:130] }}</p><div class="price">{{ fund.slot_value|inr }} <small>/ slot</small></div><div class="fund-facts"><span>Minimum {{ fund.min_slots }} slots</span><span>Expected {{ fund.expected_interest_rate }}%</span><span>Matures {{ fund.maturity_date.strftime('%d %b %Y') }}</span></div><a class="btn primary" href="{{ url_for('fund_detail', fund_id=fund.id) }}">View details</a></div>{% else %}<div class="card">No plans are currently open.</div>{% endfor %}</div>
 </section>
 
-<section class="consult-section reveal" id="consult">
-  <div><span class="eyebrow">Need help?</span><h2>Request a quick guidance call</h2><p>Users can ask questions before choosing slots. This section improves credibility and gives visitors a clear support path.</p></div>
-  <form class="lead-form" method="post" action="{{ url_for('lead_submit') }}"><div class="field"><label>Name</label><input name="name" required placeholder="Your full name"></div><div class="field"><label>Mobile number</label><input name="phone" required placeholder="10-digit mobile number"></div><div class="field"><label>Email</label><input name="email" type="email" placeholder="you@example.com"></div><div class="field"><label>Interested amount range</label><select name="amount_range"><option>Below ₹25,000</option><option>₹25,000 - ₹1,00,000</option><option>₹1,00,000 - ₹5,00,000</option><option>Above ₹5,00,000</option></select></div><button class="btn primary" type="submit">Submit request</button><p class="small-note muted">By submitting, you agree to be contacted for plan-related assistance.</p></form>
+<section class="faq-section">
+  <div class="section-center"><span class="eyebrow">Questions</span><h2>Everything users need before payment.</h2></div>
+  <div class="faq-grid">
+    <details open><summary>Will users see my real UPI ID?</summary><p>No. The payment page shows a branded QR flow. The actual receiving UPI ID is configured from Railway environment variables.</p></details>
+    <details><summary>Can the page close automatically after payment?</summary><p>Yes, when a payment provider webhook or status API confirms success. Without gateway confirmation, a normal UPI QR cannot reliably tell the website that money was received.</p></details>
+    <details><summary>Where will allocated slots appear?</summary><p>After approval, users can open their dashboard to see plan name, slot count, principal amount, expected maturity value, and status.</p></details>
+    <details><summary>What if the QR expires?</summary><p>The QR is valid for 60 seconds. A fresh QR can be generated after the refresh window.</p></details>
+  </div>
+</section>
+
+<section id="consult" class="consult-section">
+  <div><span class="eyebrow">Need assistance?</span><h2>Request a callback before choosing a plan.</h2><p>Capture serious user enquiries directly from the landing page. Admin can view all leads inside the admin panel.</p></div>
+  <form class="lead-form" method="post" action="{{ url_for('lead_submit') }}"><div class="field"><label>Name</label><input name="name" required></div><div class="field"><label>Mobile number</label><input name="phone" required></div><div class="field"><label>Email</label><input name="email"></div><div class="field"><label>Interested amount range</label><select name="amount_range"><option>Below ₹50,000</option><option>₹50,000 - ₹2,00,000</option><option>₹2,00,000 - ₹10,00,000</option><option>Above ₹10,00,000</option></select></div><button class="btn primary">Request callback</button></form>
 </section>
 {% endblock %}

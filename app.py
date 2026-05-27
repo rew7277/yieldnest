@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from functools import wraps
 
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, request, url_for, send_file
+from flask import Flask, flash, redirect, render_template, request, url_for, send_file, jsonify
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -25,6 +25,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 BRAND_NAME = os.getenv("BRAND_NAME", "YieldNest")
 SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@example.com")
+PLATFORM_UPI_ID = os.getenv("PLATFORM_UPI_ID", os.getenv("PHONEPE_UPI_ID", "yourbusiness@ybl"))
+PLATFORM_PAYEE_NAME = os.getenv("PLATFORM_PAYEE_NAME", BRAND_NAME)
+PAYMENT_WEBHOOK_SECRET = os.getenv("PAYMENT_WEBHOOK_SECRET", "change-this-webhook-secret")
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -149,13 +152,15 @@ def ensure_qr_token(inv, force=False):
 
 
 def build_upi_uri(inv):
-    note = f"YN-{inv.id}-{inv.qr_token[:8]}"
+    # UPI details come from Railway environment variables, not from the user-facing UI.
+    # The payer only sees the branded payee name in their UPI app.
+    note = f"YN{inv.id}{inv.qr_token[:8]}"
     params = {
-        "pa": inv.fund.phonepe_upi_id,
-        "pn": BRAND_NAME,
+        "pa": PLATFORM_UPI_ID,
+        "pn": PLATFORM_PAYEE_NAME or BRAND_NAME,
         "am": f"{Decimal(inv.principal_amount):.2f}",
         "cu": "INR",
-        "tn": note,
+        "tn": f"{BRAND_NAME} slot request {inv.id}",
         "tr": note,
     }
     return "upi://pay?" + urlencode(params)
@@ -292,24 +297,63 @@ def payment_submit(investment_id):
         if not inv.qr_token or submitted_token != inv.qr_token or not inv.qr_expires_at or now > inv.qr_expires_at:
             flash("This QR session has expired. Please generate a fresh QR and submit again.", "error")
             return redirect(url_for("payment_submit", investment_id=inv.id))
-        inv.payer_name = request.form.get("payer_name", "").strip()
-        inv.payer_upi_id = request.form.get("payer_upi_id", "").strip()
-        inv.payer_phonepe_number = request.form.get("payer_phonepe_number", "").strip()
-        inv.utr_reference = request.form.get("utr_reference", "").strip()
-        inv.screenshot_url = request.form.get("screenshot_url", "").strip()
-        if not inv.utr_reference or not inv.payer_name:
-            flash("Payer name and UTR/reference number are required.", "error")
-            return redirect(url_for("payment_submit", investment_id=inv.id))
-        inv.payment_status = "submitted"
-        inv.status = "verification_pending"
+        # No user-entered payment details are required. This marks the user intent as paid.
+        # Final approval is automatic only when a payment provider webhook/status check confirms the transaction.
+        inv.payment_status = "awaiting_gateway_confirmation"
+        inv.status = "payment_processing"
         inv.paid_at = now
         db.session.commit()
-        flash("Payment notification submitted. We will verify it shortly.", "success")
-        return redirect(url_for("user_dashboard"))
+        flash("Payment confirmation is being checked. Your dashboard will update after verification.", "success")
+        return redirect(url_for("payment_submit", investment_id=inv.id))
     now = datetime.utcnow()
     if not inv.qr_token or not inv.qr_regenerate_after or now >= inv.qr_regenerate_after:
         ensure_qr_token(inv, force=True)
     return render_template("user/payment.html", inv=inv, now=now)
+
+
+@app.route("/investment/<int:investment_id>/payment/status")
+@login_required
+def payment_status(investment_id):
+    inv = Investment.query.get_or_404(investment_id)
+    if inv.user_id != current_user.id and current_user.role != "admin":
+        return jsonify({"ok": False, "error": "access_denied"}), 403
+    return jsonify({
+        "ok": True,
+        "status": inv.status,
+        "payment_status": inv.payment_status,
+        "redirect_url": url_for("user_dashboard") if inv.status in ["approved", "verification_pending", "payment_processing"] else None,
+        "qr_expires_at": inv.qr_expires_at.isoformat() + "Z" if inv.qr_expires_at else None,
+        "qr_regenerate_after": inv.qr_regenerate_after.isoformat() + "Z" if inv.qr_regenerate_after else None,
+    })
+
+
+@app.route("/api/payment/webhook", methods=["POST"])
+def payment_webhook():
+    """Provider callback endpoint. Connect this to PhonePe/PG webhook after merchant activation.
+
+    Expected JSON for this starter:
+    {"secret": "...", "investment_id": 123, "transaction_ref": "...", "status": "SUCCESS"}
+    """
+    data = request.get_json(silent=True) or {}
+    if data.get("secret") != PAYMENT_WEBHOOK_SECRET:
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    inv = Investment.query.get_or_404(int(data.get("investment_id", 0)))
+    txn_status = str(data.get("status", "")).upper()
+    inv.utr_reference = str(data.get("transaction_ref", "")).strip() or inv.utr_reference
+    inv.reviewed_at = datetime.utcnow()
+    if txn_status in ["SUCCESS", "COMPLETED", "PAID"]:
+        inv.payment_status = "verified"
+        inv.status = "approved"
+        inv.admin_note = "Auto-verified by payment webhook."
+    elif txn_status in ["FAILED", "REJECTED"]:
+        inv.payment_status = "rejected"
+        inv.status = "rejected"
+        inv.admin_note = "Payment provider reported failure."
+    else:
+        inv.payment_status = "awaiting_gateway_confirmation"
+        inv.status = "payment_processing"
+    db.session.commit()
+    return jsonify({"ok": True})
 
 
 @app.route("/investment/<int:investment_id>/qr.png")
@@ -386,8 +430,10 @@ def admin_fund_form(fund_id=None):
         fund.expected_interest_rate = Decimal(request.form["expected_interest_rate"])
         fund.maturity_date = datetime.strptime(request.form["maturity_date"], "%Y-%m-%d").date()
         fund.early_exit_charge_percent = Decimal(request.form.get("early_exit_charge_percent") or 0)
-        fund.phonepe_number = request.form["phonepe_number"].strip()
-        fund.phonepe_upi_id = request.form["phonepe_upi_id"].strip()
+        # Payment receiving identity is managed through Railway environment variables:
+        # PLATFORM_UPI_ID and PLATFORM_PAYEE_NAME. Keep fund fields populated only for legacy DB compatibility.
+        fund.phonepe_number = os.getenv("PLATFORM_PHONEPE_NUMBER", "hidden")
+        fund.phonepe_upi_id = PLATFORM_UPI_ID
         fund.risk_note = request.form.get("risk_note", "").strip()
         fund.is_active = bool(request.form.get("is_active"))
         db.session.commit()
@@ -453,8 +499,8 @@ def seed():
             expected_interest_rate=Decimal("12"),
             maturity_date=date(date.today().year + 1, 12, 31),
             early_exit_charge_percent=Decimal("3"),
-            phonepe_number="9999999999",
-            phonepe_upi_id="yourbusiness@ybl",
+            phonepe_number=os.getenv("PLATFORM_PHONEPE_NUMBER", "hidden"),
+            phonepe_upi_id=PLATFORM_UPI_ID,
             risk_note="Returns are expected values and subject to final plan terms, payment verification, and applicable law.",
         )
         db.session.add(sample)

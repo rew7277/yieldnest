@@ -1,12 +1,25 @@
 {% extends 'base.html' %}{% block content %}
-<div class="payment-layout">
-  <div class="card pay-card">
-    <span class="pill">Secure QR session</span><h1>Complete payment</h1><p class="muted">Scan this QR from PhonePe, GPay, Paytm, or any UPI app. This QR is unique to this request.</p>
+<div class="payment-shell">
+  <div class="card pay-card premium-pay">
+    <span class="pill">Secure payment session</span>
+    <h1>Scan & pay</h1>
+    <p class="muted">Open any UPI app, scan the QR, and complete the payment. The QR is unique to your slot request and expires quickly for safety.</p>
     <div class="amount-box"><span>Amount payable</span><strong>{{ inv.principal_amount|inr }}</strong></div>
     <div class="qr-wrap"><img class="qr-img" src="{{ url_for('payment_qr_png', investment_id=inv.id) }}?v={{ inv.qr_token }}" alt="UPI QR code"><div id="qrStatus" class="qr-status" data-exp="{{ inv.qr_expires_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}" data-regen="{{ inv.qr_regenerate_after.strftime('%Y-%m-%dT%H:%M:%SZ') }}">Checking QR validity...</div></div>
     <form method="post" action="{{ url_for('refresh_payment_qr', investment_id=inv.id) }}"><button id="refreshQrBtn" class="btn ghost" type="submit">Generate fresh QR</button></form>
-    <p class="muted small-note">QR is valid for 60 seconds. A fresh QR can be generated after the 2-minute refresh window.</p>
+    <form method="post" class="paid-form"><input type="hidden" name="qr_token" value="{{ inv.qr_token }}"><button class="btn primary btn-wide">I have completed payment</button></form>
+    <p class="muted small-note">After payment confirmation, this page automatically redirects to your dashboard and your allocated slots will be visible there.</p>
   </div>
-  <div class="card"><h2>Send payment notification</h2><p class="muted">After payment, enter your transaction details so the payment can be verified.</p><form method="post"><input type="hidden" name="qr_token" value="{{ inv.qr_token }}"><div class="field"><label>Payer name</label><input name="payer_name" required></div><div class="field"><label>Payer UPI ID</label><input name="payer_upi_id" placeholder="example@ybl"></div><div class="field"><label>Payer PhonePe number</label><input name="payer_phonepe_number"></div><div class="field"><label>UTR / transaction reference ID</label><input name="utr_reference" required></div><div class="field"><label>Screenshot URL (optional)</label><input name="screenshot_url" placeholder="Paste uploaded screenshot link if available"></div><button class="btn primary">Notify for verification</button></form></div>
+  <div class="payment-side card">
+    <h2>What happens next?</h2>
+    <div class="pay-step"><b>1</b><span>QR opens with the payee name as <strong>{{ brand_name }}</strong>.</span></div>
+    <div class="pay-step"><b>2</b><span>Payment confirmation is checked securely using the payment callback/status flow.</span></div>
+    <div class="pay-step"><b>3</b><span>Once verified, the request closes automatically and your slots appear on the dashboard.</span></div>
+    <div class="pay-wait"><span class="loader-dot"></span><p>Waiting for payment confirmation...</p></div>
+  </div>
 </div>
+<script>
+window.YN_PAYMENT_STATUS_URL = "{{ url_for('payment_status', investment_id=inv.id) }}";
+window.YN_DASHBOARD_URL = "{{ url_for('user_dashboard') }}";
+</script>
 {% endblock %}
