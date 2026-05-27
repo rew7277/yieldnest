@@ -1,9 +1,72 @@
 {% extends 'base.html' %}{% block content %}
-<section class="hero pro-hero">
-  <div class="hero-copy reveal"><span class="pill">Secure slot-based plan platform</span><h1>Purchase slots with clarity, track maturity with confidence.</h1><p>A clean and user-friendly platform where members can view published plans, understand slot value, expected maturity amount, maturity date, and early-exit terms before making a payment.</p><div class="cta-row"><a class="btn primary large" href="{{ url_for('register') }}">Get started</a><a class="btn ghost large" href="#plans">Explore plans</a></div><div class="trust-row"><span>✓ Clear plan details</span><span>✓ Timed QR sessions</span><span>✓ Verification workflow</span></div></div>
-  <div class="visual-card reveal delay"><div class="glass-card"><div class="mini-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="orbit"><div class="qr-mock"><span></span><span></span><span></span><span></span></div></div><h3>Dynamic QR Payment</h3><p>Each purchase receives a unique QR session with a short validity window for safer payment confirmation.</p></div><div class="floating-chip c1">Slot value</div><div class="floating-chip c2">Maturity date</div><div class="floating-chip c3">Expected return</div></div>
+<section class="wealth-hero">
+  <div class="hero-copy reveal">
+    <span class="eyebrow">Private slot-based plan access</span>
+    <h1>Build confidence before every slot purchase.</h1>
+    <p class="lead">A premium digital platform where members can discover curated plans, compare slot value, maturity timeline, expected benefit, exit terms, and complete secure QR-based payment submission with transparent verification.</p>
+    <div class="cta-row"><a class="btn primary large" href="#plans">View available plans</a><a class="btn ghost large" href="#consult">Request a call</a></div>
+    <div class="cred-strip"><span>✓ Transparent plan terms</span><span>✓ 60-sec dynamic QR</span><span>✓ Manual payment verification</span><span>✓ User dashboard tracking</span></div>
+  </div>
+  <div class="hero-invest-card reveal delay">
+    <div class="dashboard-mock">
+      <div class="mock-head"><span></span><span></span><span></span></div>
+      <div class="mock-value"><small>Expected maturity view</small><b>₹1,12,000</b><em>based on selected plan</em></div>
+      <div class="chart-bars"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="qr-session"><div class="qr-mini"><span></span><span></span><span></span><span></span></div><div><b>Dynamic UPI QR</b><small>Expires in 60 seconds</small></div></div>
+    </div>
+    <div class="metric-card m1"><b>Slot value</b><span>Admin configured</span></div>
+    <div class="metric-card m2"><b>Maturity date</b><span>Visible before payment</span></div>
+    <div class="metric-card m3"><b>Exit terms</b><span>Clear charges shown</span></div>
+  </div>
 </section>
-<section class="feature-band reveal"><div><b>Transparent</b><span>Plan values and terms shown before purchase.</span></div><div><b>Secure</b><span>Unique QR session per purchase request.</span></div><div><b>Trackable</b><span>Users can check request and verification status.</span></div><div><b>Professional</b><span>Designed for Railway deployment and easy management.</span></div></section>
-<section class="info-grid reveal"><div class="card info-card"><h2>How it works</h2><ol><li>Select a published plan.</li><li>Choose slots within the allowed minimum and maximum.</li><li>Review payable amount and expected maturity amount.</li><li>Scan the secure QR and submit UTR/reference details.</li><li>Track verification status from your dashboard.</li></ol></div><div class="card info-card accent"><h2>Built for trust</h2><p>Every plan page highlights slot value, maturity date, expected return, and early exit charges. Payment details are verified before any request is marked approved.</p></div></section>
-<div id="plans" class="section-title reveal"><h2>Available Plans</h2><span class="muted">Choose a plan and review details before purchase</span></div><div class="grid reveal">{% for fund in funds %}<div class="card fund"><span class="badge ok">Active</span><h3>{{ fund.name }}</h3><p class="muted">{{ fund.tagline or fund.description[:110] }}</p><div class="price">{{ fund.slot_value|inr }} / slot</div><p><b>Min slots:</b> {{ fund.min_slots }} · <b>Expected:</b> {{ fund.expected_interest_rate }}% · <b>Maturity:</b> {{ fund.maturity_date.strftime('%d %b %Y') }}</p><a class="btn primary" href="{{ url_for('login') }}">Login to purchase</a></div>{% else %}<div class="card"><p>No active plans yet.</p></div>{% endfor %}</div>
+
+<section class="brand-stats reveal">
+  <div><b>100%</b><span>Plan values controlled from admin panel</span></div>
+  <div><b>60 sec</b><span>QR validity window per purchase</span></div>
+  <div><b>2 min</b><span>QR regeneration protection</span></div>
+  <div><b>Live</b><span>Status tracking after payment submission</span></div>
+</section>
+
+<section class="split-section reveal" id="about">
+  <div>
+    <span class="eyebrow">Why this platform</span>
+    <h2>Designed to feel credible, clear, and easy for first-time users.</h2>
+    <p>Users should not feel confused about what they are buying. Every plan highlights the slot price, minimum slot requirement, maturity date, expected benefit calculation, payment process, and early-exit terms before they submit payment details.</p>
+  </div>
+  <div class="benefit-grid">
+    <div class="benefit"><b>Plan discovery</b><span>Show multiple published plans with concise highlights and detailed pages.</span></div>
+    <div class="benefit"><b>Expected maturity</b><span>Calculate expected value based on slots and admin-configured percentage.</span></div>
+    <div class="benefit"><b>Payment discipline</b><span>Each request gets a unique QR session instead of exposing raw UPI details.</span></div>
+    <div class="benefit"><b>Approval workflow</b><span>Admin reviews UTR/reference details before approval.</span></div>
+  </div>
+</section>
+
+<section class="process-section reveal" id="process">
+  <div class="section-center"><span class="eyebrow">How it works</span><h2>A simple purchase journey from plan selection to verification.</h2></div>
+  <div class="timeline-cards">
+    <div><small>01</small><b>Explore plans</b><p>Review fund name, slot value, expected rate, maturity date, minimum slots, and terms.</p></div>
+    <div><small>02</small><b>Choose slots</b><p>Select the number of slots allowed by the plan and preview payable and expected maturity amounts.</p></div>
+    <div><small>03</small><b>Pay by QR</b><p>Scan the temporary UPI QR generated only for that purchase request.</p></div>
+    <div><small>04</small><b>Submit proof</b><p>Enter payer name, UPI ID, PhonePe number, and UTR/reference ID for admin verification.</p></div>
+    <div><small>05</small><b>Track status</b><p>User dashboard shows pending, submitted, approved, rejected, and maturity information.</p></div>
+  </div>
+</section>
+
+<section class="trust-panel reveal">
+  <div class="trust-copy"><span class="eyebrow">Built for trust</span><h2>No hidden confusion. Every important condition is visible.</h2><p>Early withdrawal charges, payment verification rules, maturity calculation, and risk notes are displayed before the user proceeds. This helps the site look legitimate and avoids misleading claims.</p></div>
+  <div class="trust-checks"><p>✓ Clear terms before purchase</p><p>✓ No raw payment details shown publicly</p><p>✓ QR expiry and regeneration control</p><p>✓ Admin approval before confirmation</p><p>✓ Responsive mobile-friendly layout</p></div>
+</section>
+
+<div id="plans" class="section-title reveal"><div><span class="eyebrow">Available plans</span><h2>Choose a published plan</h2></div><span class="muted">Review all details before purchase</span></div>
+<div class="grid reveal">{% for fund in funds %}<div class="card fund premium-fund"><span class="badge ok">Open for purchase</span><h3>{{ fund.name }}</h3><p class="muted">{{ fund.tagline or fund.description[:110] }}</p><div class="price">{{ fund.slot_value|inr }} <small>/ slot</small></div><div class="fund-facts"><span>Min {{ fund.min_slots }} slots</span><span>{{ fund.expected_interest_rate }}% expected</span><span>{{ fund.maturity_date.strftime('%d %b %Y') }}</span></div><a class="btn primary" href="{{ url_for('login') }}">Login to purchase</a></div>{% else %}<div class="card"><p>No active plans yet.</p></div>{% endfor %}</div>
+
+<section class="faq-section reveal" id="faq">
+  <div class="section-center"><span class="eyebrow">Questions users ask</span><h2>Important information before proceeding</h2></div>
+  <div class="faq-grid"><details open><summary>Is the maturity amount guaranteed?</summary><p>No. Displayed values are expected calculations based on admin-configured plan rules and must be reviewed with final agreement and applicable law.</p></details><details><summary>What happens if payment is sent but not approved?</summary><p>The request remains pending or can be rejected if transaction evidence is incomplete, incorrect, or suspicious.</p></details><details><summary>Can a user exit before maturity?</summary><p>Early withdrawal can attract charges. The charge percentage is shown on the plan page before purchase.</p></details><details><summary>Why is QR valid only for 60 seconds?</summary><p>Short-lived QR sessions reduce confusion and help each payment request stay linked to a unique purchase session.</p></details></div>
+</section>
+
+<section class="consult-section reveal" id="consult">
+  <div><span class="eyebrow">Need help?</span><h2>Request a quick guidance call</h2><p>Users can ask questions before choosing slots. This section improves credibility and gives visitors a clear support path.</p></div>
+  <form class="lead-form" method="post" action="{{ url_for('lead_submit') }}"><div class="field"><label>Name</label><input name="name" required placeholder="Your full name"></div><div class="field"><label>Mobile number</label><input name="phone" required placeholder="10-digit mobile number"></div><div class="field"><label>Email</label><input name="email" type="email" placeholder="you@example.com"></div><div class="field"><label>Interested amount range</label><select name="amount_range"><option>Below ₹25,000</option><option>₹25,000 - ₹1,00,000</option><option>₹1,00,000 - ₹5,00,000</option><option>Above ₹5,00,000</option></select></div><button class="btn primary" type="submit">Submit request</button><p class="small-note muted">By submitting, you agree to be contacted for plan-related assistance.</p></form>
+</section>
 {% endblock %}

@@ -60,3 +60,18 @@ Open `http://127.0.0.1:5000`
 
 ## Payment flow
 This starter supports manual UPI/PhonePe verification. Users scan the generated QR and submit transaction details. Admin approves only after verifying the transaction. For fully automatic payment status and callbacks, integrate the official PhonePe Payment Gateway APIs.
+
+## V3 landing-page upgrade
+
+This version adds a premium marketing-style home page inspired by modern wealth/portfolio sites:
+
+- Rich hero section with plan value, maturity, QR session, and trust messaging
+- Stats strip
+- Why-this-platform section
+- Step-by-step process section
+- Trust and terms visibility panel
+- FAQ section
+- Lead/call request form
+- Admin page for viewing call requests: `/admin/leads`
+
+The public page avoids technical deployment wording and does not expose PhonePe number or raw UPI ID on the payment screen. Payment continues through a short-lived dynamic QR session.

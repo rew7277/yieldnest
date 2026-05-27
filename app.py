@@ -92,6 +92,16 @@ class Investment(db.Model):
     fund = db.relationship("Fund", backref="investments")
 
 
+class Lead(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(30), nullable=False)
+    email = db.Column(db.String(180), nullable=True)
+    amount_range = db.Column(db.String(80), nullable=True)
+    status = db.Column(db.String(30), default="new", nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -163,6 +173,22 @@ def inr(value):
 def index():
     funds = Fund.query.filter_by(is_active=True).order_by(Fund.created_at.desc()).limit(6).all()
     return render_template("index.html", funds=funds)
+
+
+@app.route("/lead", methods=["POST"])
+def lead_submit():
+    name = request.form.get("name", "").strip()
+    phone = request.form.get("phone", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    amount_range = request.form.get("amount_range", "").strip()
+    if not name or not phone:
+        flash("Please enter name and mobile number.", "error")
+        return redirect(url_for("index") + "#consult")
+    lead = Lead(name=name, phone=phone, email=email, amount_range=amount_range)
+    db.session.add(lead)
+    db.session.commit()
+    flash("Request submitted. Our team will contact you shortly.", "success")
+    return redirect(url_for("index") + "#consult")
 
 
 @app.route("/terms")
@@ -376,6 +402,14 @@ def admin_fund_form(fund_id=None):
 def admin_investments():
     investments = Investment.query.order_by(Investment.created_at.desc()).all()
     return render_template("admin/investments.html", investments=investments)
+
+
+@app.route("/admin/leads")
+@login_required
+@admin_required
+def admin_leads():
+    leads = Lead.query.order_by(Lead.created_at.desc()).all()
+    return render_template("admin/leads.html", leads=leads)
 
 
 @app.route("/admin/investments/<int:investment_id>/review", methods=["POST"])
